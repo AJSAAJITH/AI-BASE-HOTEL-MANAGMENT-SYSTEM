@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button.jsx";
-import { SignedIn, SignedOut, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, UserButton, useUser } from "@clerk/clerk-react";
 import { Globe } from "lucide-react";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -9,6 +9,7 @@ const Navigation = () => {
   // const user = useSelector((state)=> state.user);
   // console.log(user);
 
+  const { user } = useUser();
 
   return (
     <nav className="flex items-center justify-between p-4 px-8 py-4 text-white bg-black">
@@ -19,11 +20,18 @@ const Navigation = () => {
         <div className="ml-8 font-medium">
           <Link to="/" className="transition-colors">Home</Link>
         </div>
-        <div className="ml-8 font-medium">
-          <Link to={"/hotels/create"} className="transition-colors">
-            Create Hotel
-          </Link>
-        </div>
+        {user?.publicMetadata?.role === "admin" && (
+          <div className="flex">
+
+            <div className="ml-8 font-medium">
+              <Link to={"/hotels/create"} className="transition-colors">
+                Create Hotel
+              </Link>
+            </div>
+          </div>
+        )}
+
+
       </div>
       <div className="flex items-center space-x-4">
         <Button variant="ghost" className="text-sm font-semibold">

@@ -7,9 +7,12 @@ import usersRouter from "./api/user";
 import bookingsRouter from "./api/booking";
 import cors from "cors";
 import globleErrorHandilngMiddleware from "./api/middleware/global-error-handding-middleware";
+import { clerkMiddleware } from "@clerk/express";
 
 // Create an Express instance
 const app = express();
+// Apply centralized middleware
+app.use(clerkMiddleware())
 
 // Middleware to parse JSON data in the request body
 app.use(express.json());
@@ -31,6 +34,6 @@ app.use(globleErrorHandilngMiddleware);
 
 // Define the port to run the server
 const PORT = process.env.PORT;
-app.listen(PORT,()=>{
+app.listen(PORT, () => {
     console.log(`Server Starting with Port: ${PORT}`);
 });
