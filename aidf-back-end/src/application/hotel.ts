@@ -1,6 +1,8 @@
+import { createHotelDTO } from "../domain/dtos/hotel";
 import ValidateError from "../domain/errors/not-found-error";
 import Hotel from "../infrastructure/schemas/Hotel";
 import { NextFunction, Request, Response } from "express";
+import OpenAI from "openai";
 // const hotels = [
 // {
 //   _id: "1",
@@ -41,19 +43,19 @@ import { NextFunction, Request, Response } from "express";
 //       "Discover the vibrant energy of Tokyo at Tokyo Tower Inn, located in the heart of Japan's bustling capital. For $180 per night, guests can enjoy modern comforts, panoramic city views, and access to iconic attractions like Shibuya Crossing and the Imperial Palace. Ideal for foodies, tech enthusiasts, and urban explorers.",
 //     __v: 0,
 //   },
-//   {
-//     _id: "4",
-//     name: "Sydney Harbour Hotel",
-//     location: "Sydney, Australia",
-//     rating: 4.8,
-//     reviews: 1023,
-//     image:
-//       "https://cf.bstatic.com/xdata/images/hotel/max1280x900/84555265.jpg?k=ce7c3c699dc591b8fbac1a329b5f57247cfa4d13f809c718069f948a4df78b54&o=&hp=1",
-//     price: 200,
-//     description:
-//       "Stay at Sydney Harbour Hotel and wake up to stunning harbour views in one of Australia's most iconic destinations. Starting at $200 per night, enjoy rooftop dining, modern facilities, and close proximity to Darling Harbour and Sydney's vibrant nightlife. Ideal for couples and city adventurers.",
-//     __v: 0,
-//   },
+// {
+//   _id: "4",
+//   name: "Sydney Harbour Hotel",
+//   location: "Sydney, Australia",
+//   rating: 4.8,
+//   reviews: 1023,
+//   image:
+//     "https://cf.bstatic.com/xdata/images/hotel/max1280x900/84555265.jpg?k=ce7c3c699dc591b8fbac1a329b5f57247cfa4d13f809c718069f948a4df78b54&o=&hp=1",
+//   price: 200,
+//   description:
+//     "Stay at Sydney Harbour Hotel and wake up to stunning harbour views in one of Australia's most iconic destinations. Starting at $200 per night, enjoy rooftop dining, modern facilities, and close proximity to Darling Harbour and Sydney's vibrant nightlife. Ideal for couples and city adventurers.",
+//   __v: 0,
+// },
 //   {
 //     _id: "5",
 //     name: "Milan Central Suites",
@@ -113,45 +115,92 @@ import { NextFunction, Request, Response } from "express";
 
 
 // create hotel - {{baseUrl}}/api/hotels/
-export const createHotel = async (req: Request, res: Response) => {
-  const hotel = req.body;
 
-  // Validate the request data
-  if (
-    !hotel.name ||
-    !hotel.location ||
-    !hotel.image ||
-    !hotel.price ||
-    !hotel.description
-  ) {
-    res.status(400).json({
-      message: "Please enter all required fields",
-    });
-    return;
-  }
+export const genarateResponce = async (req: Request, res: Response, next: NextFunction) => {
+  const { prompt } = req?.body;
 
-  // Add the hotel
-  const hoteldata = await Hotel.create({
-    name: hotel.name,
-    location: hotel.location,
-    image: hotel.image,
-    price: parseInt(hotel.price),
-    description: hotel.description,
+  const client = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
   });
 
-  // Return the response
-  res.status(201).json({ success: true, message: "hotel created successfully", data: hoteldata });
+  const completion = await client.chat.completions.create({
+    model: "gpt-4o",
+    messages: [
+      {
+        role: "system",
+        content:
+          "You are assistant that will categorize the words that a user gives and give them labels and show an output. Return this response as in the following examples: user: Lake, Cat, Dog, Tree; response: [{label:Nature, words:['Lake', 'Tree']}, {label:Animals, words:['Cat', 'Dog']}] ",
+      },
+      { role: "user", content: prompt },
+    ],
+
+    store: true,
+  });
+
+  res.status(200)
+    .json({
+      messages: {
+        role: "assistence",
+        content: completion.choices[0].message.content,
+      }
+    });
   return;
+}
+
+export const createHotel = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+
+    // const hotel = req.body;
+
+    // Validate the request data
+    // if (
+    //   !hotel.name ||
+    //   !hotel.location ||
+    //   !hotel.image ||
+    //   !hotel.price ||
+    //   !hotel.description
+    // ) {
+    //   throw new ValidateError("Invalid hotel data");
+    // }
+
+
+    const hotel = createHotelDTO.safeParse(req.body);
+
+    if (!hotel.success) {
+      throw new ValidateError("Invalid hotel data");
+    }
+
+    // Add the hotel
+    const hoteldata = await Hotel.create({
+      name: hotel.data.name,
+      location: hotel.data.location,
+      image: hotel.data.image,
+      price: parseInt(hotel.data.price),
+      description: hotel.data.description,
+    });
+
+    // Return the response
+    res.status(201).json({ success: true, message: "hotel created successfully", data: hoteldata });
+    return;
+
+  } catch (error) {
+    next(error);
+  }
+
 };
 
 // promise sleep function
 // const sleep = (ms)=> new Promise((resolve)=>setTimeout(resolve, ms));
 // getAll hotels -get {{baseUrl}}/api/hotels/
-export const getAllHotels = async (req: Request, res: Response) => {
-  const hotels = await Hotel.find();
-  // await sleep(5000);
-  res.status(200).json({ length: hotels.length, data: hotels });
-  return;
+export const getAllHotels = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hotels = await Hotel.find();
+    // await sleep(5000);
+    res.status(200).json({ length: hotels.length, data: hotels });
+    return;
+  } catch (error) {
+    next(error)
+  }
 };
 
 // post middleware
@@ -171,7 +220,7 @@ export const getHotelById = async (req: Request, res: Response, next: NextFuncti
 };
 
 // update hotels :id - put - 
-export const updateHotel = async (req: Request, res: Response) => {
+export const updateHotel = async (req: Request, res: Response, next: NextFunction) => {
   const hotelId = req.params.id; // Assuming the hotel ID is passed as a URL parameter
   const updatedHotel = req.body;
 
@@ -185,8 +234,7 @@ export const updateHotel = async (req: Request, res: Response) => {
     !updatedHotel.price ||
     !updatedHotel.description
   ) {
-    res.status(400).json({ success: false, message: "Need every required field." });
-    return;
+    throw new ValidateError("Invalid hotel data");
   }
 
   try {
@@ -199,25 +247,29 @@ export const updateHotel = async (req: Request, res: Response) => {
 
     // Check if the hotel was found and updated
     if (!updatedData) {
-      res.status(404).json({ success: false, message: "Hotel not found." });
-      return;
+      throw new ValidateError("hotel not found");
     }
 
     // Return the response
     res.status(200).json({ success: true, message: "Hotel updated", data: updatedData });
   } catch (error) {
-    console.error("Error updating hotel:", error);
-    res.status(500).json({ success: false, message: "Internal server error." });
+    // console.error("Error updating hotel:", error);
+    // res.status(500).json({ success: false, message: "Internal server error." });
+    next(error);
   }
 };
 
 // delete hotels :id - delete -
-export const deleteHotel = async (req: Request, res: Response) => {
-  const hotelId = req.params.id;
-  // Delete the hotel
-  await Hotel.findByIdAndDelete(hotelId);
-  // Return the response
-  res.status(200).json({ success: true, message: "hotel deleted successful" });
-  return;
+export const deleteHotel = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const hotelId = req.params.id;
+    // Delete the hotel
+    await Hotel.findByIdAndDelete(hotelId);
+    // Return the response
+    res.status(200).json({ success: true, message: "hotel deleted successful" });
+    return;
+  } catch (error) {
+    next(error);
+  }
 };
 
