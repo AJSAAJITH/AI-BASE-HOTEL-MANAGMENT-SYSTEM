@@ -42,9 +42,18 @@ const CreateHotelForm = () => {
                 description,
             }).unwrap();
             toast.success("Hotel created successfully");
+            clearData(values)
         } catch (error) {
             toast.error("Hotel creation failed");
         }
+    };
+
+    const clearData = (values) => {
+        values.name = "";
+        values.location = "";
+        values.image = "";
+        values.price = "";
+        values.description = "";
     };
 
     return (

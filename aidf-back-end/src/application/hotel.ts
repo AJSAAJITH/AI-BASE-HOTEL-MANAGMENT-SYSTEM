@@ -150,20 +150,6 @@ export const genarateResponce = async (req: Request, res: Response, next: NextFu
 export const createHotel = async (req: Request, res: Response, next: NextFunction) => {
   try {
 
-    // const hotel = req.body;
-
-    // Validate the request data
-    // if (
-    //   !hotel.name ||
-    //   !hotel.location ||
-    //   !hotel.image ||
-    //   !hotel.price ||
-    //   !hotel.description
-    // ) {
-    //   throw new ValidateError("Invalid hotel data");
-    // }
-
-
     const hotel = createHotelDTO.safeParse(req.body);
 
     if (!hotel.success) {

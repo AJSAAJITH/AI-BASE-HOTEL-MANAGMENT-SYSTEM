@@ -1,96 +1,126 @@
+import { useGetHotelsForSearchQueryQuery } from "@/lib/api";
+import { useState } from "react";
 import HotelCard from "./HotelCard";
 import LocationTab from "./LocationTab";
-import { useState } from "react";
-import { Button } from "./ui/button";
-import { useDispatch, useSelector } from "react-redux";
-import { setUser } from "@/lib/features/userSlice";
-import { useGetHotelsQuery } from "@/lib/api";
+import { useSelector } from "react-redux";
+export default function HotelListings() {
+  const searchValue = useSelector((state) => state.search.value);
 
-const HotelListings = () => {
-  // Fetch hotels data using Redux Toolkit Query
-  const { data: hotelsResponse, isLoading, isError, error } = useGetHotelsQuery();
+  const {
+    data: hotels,
+    isLoading,
+    isError,
+    error,
+  } = useGetHotelsForSearchQueryQuery({
+    query: searchValue,
+  });
 
-  const { user, loading } = useSelector((state) => state.userinfor);
-  const dispatch = useDispatch();
+  const locations = ["ALL", "France", "Italy", "Australia", "Japan"];
+  const [selectedLocation, setSelectedLocation] = useState("ALL");
 
-  const locations = ["All", "France", "Italy", "Australia", "Japan"];
-  const [selectedLocation, setSelectedLocation] = useState("All");
-
-  const handleSelectLocation = (location) => {
+  const handleSelectedLocation = (location) => {
     setSelectedLocation(location);
   };
 
-  // Extract the `data` property from the API response
-  const hotels = hotelsResponse?.data || [];
-
-  // Filter hotels based on the selected location
-  const filteredHotels =
-    selectedLocation === "All"
-      ? hotels // Use the extracted array
-      : hotels.filter((hotel) =>
-          hotel.location
-            .toLocaleLowerCase()
-            .includes(selectedLocation.toLocaleLowerCase())
-        );
-
   if (isLoading) {
-    return <p className="">Loading</p>;
+    return (
+      <section className="px-8 py-8 lg:py-16">
+        <div className="mb-12">
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+            Top trending hotels worldwide
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Discover the most trending hotels worldwide for an unforgettable
+            experience.
+          </p>
+        </div>
+        <div className="flex items-center gap-x-4">
+          {locations.map((location, i) => {
+            return (
+              <LocationTab
+                key={i}
+                selectedLocation={selectedLocation}
+                name={location}
+                onClick={handleSelectedLocation}
+              />
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-1 gap-8 mt-4 md:grid-cols-2 lg:grid-cols-4">
+          <p>Loading...</p>
+        </div>
+      </section>
+    );
   }
 
   if (isError) {
     return (
-      <div className="grid grid-cols-1 gap-8 mt-4 md:grid-cols-2 lg:grid-cols-4">
-        <p className="text-red-500">
-          Error: {error?.data?.message || "An error occurred"}
-        </p>
-      </div>
+      <section className="px-8 py-8 lg:py-16">
+        <div className="mb-12">
+          <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+            Top trending hotels worldwide
+          </h2>
+          <p className="text-lg text-muted-foreground">
+            Discover the most trending hotels worldwide for an unforgettable
+            experience.
+          </p>
+        </div>
+        <div className="flex items-center gap-x-4">
+          {locations.map((location, i) => {
+            return (
+              <LocationTab
+                key={i}
+                selectedLocation={selectedLocation}
+                name={location}
+                onClick={handleSelectedLocation}
+              />
+            );
+          })}
+        </div>
+        <div className="grid grid-cols-1 gap-8 mt-4 md:grid-cols-2 lg:grid-cols-4">
+          <p className="text-red-500">{error}</p>
+        </div>
+      </section>
     );
   }
 
-  return (
-    <section className="mx-8 my-16">
-      <div className="mb-12">
-        {/* {loading && <p>Hello, {user.name}</p>}
+  const filteredHotels =
+    selectedLocation === "ALL"
+      ? hotels
+      : hotels.filter(({ hotel }) => {
+        return hotel.location
+          .toLowerCase()
+          .includes(selectedLocation.toLowerCase());
+      });
 
-        <Button
-          onClick={() => {
-            dispatch(setUser({ name: "A J A Saajith" }));
-          }}
-        >
-          Click me
-        </Button> */}
-        <h2 className="mb-4 text-4xl font-bold ">
+  return (
+    <section className="px-8 py-8 lg:py-16">
+      <div className="mb-12">
+        <h2 className="mb-4 text-3xl font-bold md:text-4xl">
           Top trending hotels worldwide
         </h2>
-
-        <p className="text-lg font-medium text-muted-foreground">
+        <p className="text-lg text-muted-foreground">
           Discover the most trending hotels worldwide for an unforgettable
           experience.
         </p>
       </div>
-      <div className="flex mb-4 item-center gap-x-4">
-        {locations.map((location) => {
+      <div className="flex items-center gap-x-4">
+        {locations.map((location, i) => {
           return (
             <LocationTab
-              key={location}
-              name={location}
+              key={i}
               selectedLocation={selectedLocation}
-              onClick={handleSelectLocation}
+              name={location}
+              onClick={handleSelectedLocation}
             />
           );
         })}
       </div>
-      {isLoading ? (
-        <div>Loading...</div>
-      ) : (
-        <div className="grid grid-cols-4 gap-8">
-          {filteredHotels.map((hotel) => {
-            return <HotelCard key={hotel._id} hotel={hotel} />;
-          })}
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-8 mt-4 md:grid-cols-2 lg:grid-cols-4">
+        {filteredHotels.map(({ hotel, confidence }) => {
+          return <HotelCard key={hotel._id} hotel={hotel} confidence={confidence} />;
+        })}
+      </div>
     </section>
   );
-};
-
-export default HotelListings;
+}

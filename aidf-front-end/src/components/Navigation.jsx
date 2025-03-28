@@ -24,7 +24,7 @@ const Navigation = () => {
           <div className="flex">
 
             <div className="ml-8 font-medium">
-              <Link to={"/hotels/create"} className="transition-colors">
+              <Link to={"/admin/hotels/create"} className="transition-colors">
                 Create Hotel
               </Link>
             </div>
