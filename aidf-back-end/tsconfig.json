@@ -1,11 +1,20 @@
 {
   "compilerOptions": {
-    "sourceMap": true,
-    "outDir": "dist",
+    "target": "ES2015",
+    "lib": [
+      "ES2015",
+      "DOM"
+    ],
+    "module": "commonjs",
+    "esModuleInterop": true,
     "strict": true,
-    "lib": ["ESNext"],
-    "esModuleInterop": true
-  }
-  // "include": ["src/**/*/.ts"],
-  // "exclude": ["node_modules"],
+    "skipLibCheck": true, // Temporarily ignore library type checks
+    "outDir": "dist"
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
 }

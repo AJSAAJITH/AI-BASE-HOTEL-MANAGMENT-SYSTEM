@@ -18,7 +18,15 @@ const BookingSchema = new mongoose.Schema({
     type: Date,
     required: true,
   },
-  roomNumber: {
+  customer_name: {
+    type: String,
+    required: true,
+  },
+  phone: {
+    type: String,
+    required: true,
+  },
+  rooms_count: {
     type: Number,
     required: true,
   },

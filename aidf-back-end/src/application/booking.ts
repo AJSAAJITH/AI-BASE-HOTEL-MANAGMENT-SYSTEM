@@ -20,7 +20,9 @@ export const createBooking = async (req: Request, res: Response, next: NextFunct
       userId: userId,
       checkIn: booking.data.checkIn,
       checkOut: booking.data.checkOut,
-      roomNumber: booking.data.roomNumber,
+      customer_name: booking.data.customer_name,
+      phone: booking.data.phone,
+      rooms_count: booking.data.rooms_count
     });
 
     // Return the response
@@ -51,7 +53,8 @@ export const getAllBookingsForHotel = async (req: Request, res: Response, next: 
 
   // Validate hotelId
   if (!mongoose.Types.ObjectId.isValid(hotelId)) {
-    return res.status(400).json({ message: "Invalid hotel ID" });
+    res.status(400).json({ message: "Invalid hotel ID" });
+    return;
   }
 
   try {
@@ -59,7 +62,7 @@ export const getAllBookingsForHotel = async (req: Request, res: Response, next: 
     const bookings = await Booking.find({ hotelId: hotelId });
     const bookingWithUser = await Promise.all(bookings.map(async (el) => {
       const user = await clerkClient.users.getUser(el.userId);
-      return { _id: el._id, hotelId: el.hotelId, checkIn: el.checkIn, checkOut: el.checkOut, roomNumber: el.roomNumber, user: { id: user.id, firstName: user?.firstName, lastName: user?.lastName } }
+      return { _id: el._id, hotelId: el.hotelId, checkIn: el.checkIn, checkOut: el.checkOut, customer_name: el.customer_name, phone: el.phone, rooms: el.rooms_count, user: { id: user.id, firstName: user?.firstName, lastName: user?.lastName } }
     })
     );
     res.status(200).json({ success: true, data: bookingWithUser });

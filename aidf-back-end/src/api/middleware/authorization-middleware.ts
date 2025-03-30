@@ -1,4 +1,4 @@
-import { NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 import ForbiddenError from "../../domain/errors/forbidden_error";
 
 export const isAmdin = (req: Request, res: Response, next: NextFunction) => {

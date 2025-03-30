@@ -1,6 +1,6 @@
 import { MongoDBAtlasVectorSearch } from "@langchain/mongodb";
 import { OpenAIEmbeddings } from "@langchain/openai";
-import { NextFunction } from "express";
+import { NextFunction, Request, Response } from "express"; // Added Request and Response imports
 import mongoose, { model } from "mongoose";
 import Hotel from "../infrastructure/schemas/Hotel";
 import { Document } from "@langchain/core/documents";
@@ -31,9 +31,12 @@ export const createEmberdding = async (req: Request, res: Response, next: NextFu
 
         res.status(200).json({
             message: "Emberdding create successfully."
-        })
+        });
 
     } catch (error) {
-        res.status(500)
+        res.status(500).json({
+            message: "An error occurred",
+            error: error instanceof Error ? error.message : "Unknown error"
+        });
     }
 }

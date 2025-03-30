@@ -1,8 +1,22 @@
-import { createHotelDTO } from "../domain/dtos/hotel";
-import ValidateError from "../domain/errors/not-found-error";
-import Hotel from "../infrastructure/schemas/Hotel";
-import { NextFunction, Request, Response } from "express";
-import OpenAI from "openai";
+"use strict";
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.deleteHotel = exports.updateHotel = exports.getHotelById = exports.getAllHotels = exports.createHotel = exports.genarateResponce = void 0;
+const hotel_1 = require("../domain/dtos/hotel");
+const not_found_error_1 = __importDefault(require("../domain/errors/not-found-error"));
+const Hotel_1 = __importDefault(require("../infrastructure/schemas/Hotel"));
+const openai_1 = __importDefault(require("openai"));
 // const hotels = [
 // {
 //   _id: "1",
@@ -109,153 +123,135 @@ import OpenAI from "openai";
 //     __v: 0,
 //   },
 // ];
-
 // The below are request handler functions
-
-
-
 // create hotel - {{baseUrl}}/api/hotels/
-
-export const genarateResponce = async (req: Request, res: Response, next: NextFunction) => {
-  const { prompt } = req?.body;
-
-  const client = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  const completion = await client.chat.completions.create({
-    model: "gpt-4o",
-    messages: [
-      {
-        role: "system",
-        content:
-          "You are assistant that will categorize the words that a user gives and give them labels and show an output. Return this response as in the following examples: user: Lake, Cat, Dog, Tree; response: [{label:Nature, words:['Lake', 'Tree']}, {label:Animals, words:['Cat', 'Dog']}] ",
-      },
-      { role: "user", content: prompt },
-    ],
-
-    store: true,
-  });
-
-  res.status(200)
-    .json({
-      messages: {
-        role: "assistence",
-        content: completion.choices[0].message.content,
-      }
+const genarateResponce = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const { prompt } = req === null || req === void 0 ? void 0 : req.body;
+    const client = new openai_1.default({
+        apiKey: process.env.OPENAI_API_KEY,
     });
-  return;
-}
-
-export const createHotel = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-
-    const hotel = createHotelDTO.safeParse(req.body);
-
-    if (!hotel.success) {
-      throw new ValidateError("Invalid hotel data");
-    }
-
-    // Add the hotel
-    const hoteldata = await Hotel.create({
-      name: hotel.data.name,
-      location: hotel.data.location,
-      image: hotel.data.image,
-      price: Number(hotel.data.price),
-      description: hotel.data.description,
+    const completion = yield client.chat.completions.create({
+        model: "gpt-4o",
+        messages: [
+            {
+                role: "system",
+                content: "You are assistant that will categorize the words that a user gives and give them labels and show an output. Return this response as in the following examples: user: Lake, Cat, Dog, Tree; response: [{label:Nature, words:['Lake', 'Tree']}, {label:Animals, words:['Cat', 'Dog']}] ",
+            },
+            { role: "user", content: prompt },
+        ],
+        store: true,
     });
-
-    // Return the response
-    res.status(201).json({ success: true, message: "hotel created successfully", data: hoteldata });
+    res.status(200)
+        .json({
+        messages: {
+            role: "assistence",
+            content: completion.choices[0].message.content,
+        }
+    });
     return;
-
-  } catch (error) {
-    next(error);
-  }
-
-};
-
+});
+exports.genarateResponce = genarateResponce;
+const createHotel = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotel = hotel_1.createHotelDTO.safeParse(req.body);
+        if (!hotel.success) {
+            throw new not_found_error_1.default("Invalid hotel data");
+        }
+        // Add the hotel
+        const hoteldata = yield Hotel_1.default.create({
+            name: hotel.data.name,
+            location: hotel.data.location,
+            image: hotel.data.image,
+            price: Number(hotel.data.price),
+            description: hotel.data.description,
+        });
+        // Return the response
+        res.status(201).json({ success: true, message: "hotel created successfully", data: hoteldata });
+        return;
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.createHotel = createHotel;
 // promise sleep function
 // const sleep = (ms)=> new Promise((resolve)=>setTimeout(resolve, ms));
 // getAll hotels -get {{baseUrl}}/api/hotels/
-export const getAllHotels = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const hotels = await Hotel.find();
-    // await sleep(5000);
-    res.status(200).json({ length: hotels.length, data: hotels });
-    return;
-  } catch (error) {
-    next(error)
-  }
-};
-
+const getAllHotels = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotels = yield Hotel_1.default.find();
+        // await sleep(5000);
+        res.status(200).json({ length: hotels.length, data: hotels });
+        return;
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.getAllHotels = getAllHotels;
 // post middleware
 // get hotel by id: -get {{baseUrl}}/api/hotels/67acda2277e1b687533ec5b1
-export const getHotelById = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const hotelId = req.params.id;
-    const hotel = await Hotel.findById(hotelId);
-    if (!hotel) {
-      throw new ValidateError("Invalid hotel data");
+const getHotelById = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotelId = req.params.id;
+        const hotel = yield Hotel_1.default.findById(hotelId);
+        if (!hotel) {
+            throw new not_found_error_1.default("Invalid hotel data");
+        }
+        res.status(200).json(hotel);
+        return;
     }
-    res.status(200).json(hotel);
-    return;
-  } catch (error) {
-    next(error);
-  }
-};
-
+    catch (error) {
+        next(error);
+    }
+});
+exports.getHotelById = getHotelById;
 // update hotels :id - put - 
-export const updateHotel = async (req: Request, res: Response, next: NextFunction) => {
-  const hotelId = req.params.id; // Assuming the hotel ID is passed as a URL parameter
-  const updatedHotel = req.body;
-
-  // Validate the request data
-  if (
-    !updatedHotel.name ||
-    !updatedHotel.location ||
-    !updatedHotel.rating ||
-    !updatedHotel.reviews ||
-    !updatedHotel.image ||
-    !updatedHotel.price ||
-    !updatedHotel.description
-  ) {
-    throw new ValidateError("Invalid hotel data");
-  }
-
-  try {
-    // Update the hotel
-    const updatedData = await Hotel.findByIdAndUpdate(
-      hotelId, // The ID of the document to update
-      updatedHotel, // The data to update
-      { new: true } // Return the updated document
-    );
-
-    // Check if the hotel was found and updated
-    if (!updatedData) {
-      throw new ValidateError("hotel not found");
+const updateHotel = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    const hotelId = req.params.id; // Assuming the hotel ID is passed as a URL parameter
+    const updatedHotel = req.body;
+    // Validate the request data
+    if (!updatedHotel.name ||
+        !updatedHotel.location ||
+        !updatedHotel.rating ||
+        !updatedHotel.reviews ||
+        !updatedHotel.image ||
+        !updatedHotel.price ||
+        !updatedHotel.description) {
+        throw new not_found_error_1.default("Invalid hotel data");
     }
-
-    // Return the response
-    res.status(200).json({ success: true, message: "Hotel updated", data: updatedData });
-  } catch (error) {
-    // console.error("Error updating hotel:", error);
-    // res.status(500).json({ success: false, message: "Internal server error." });
-    next(error);
-  }
-};
-
+    try {
+        // Update the hotel
+        const updatedData = yield Hotel_1.default.findByIdAndUpdate(hotelId, // The ID of the document to update
+        updatedHotel, // The data to update
+        { new: true } // Return the updated document
+        );
+        // Check if the hotel was found and updated
+        if (!updatedData) {
+            throw new not_found_error_1.default("hotel not found");
+        }
+        // Return the response
+        res.status(200).json({ success: true, message: "Hotel updated", data: updatedData });
+    }
+    catch (error) {
+        // console.error("Error updating hotel:", error);
+        // res.status(500).json({ success: false, message: "Internal server error." });
+        next(error);
+    }
+});
+exports.updateHotel = updateHotel;
 // delete hotels :id - delete -
-export const deleteHotel = async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const hotelId = req.params.id;
-    // Delete the hotel
-    await Hotel.findByIdAndDelete(hotelId);
-    // Return the response
-    res.status(200).json({ success: true, message: "hotel deleted successful" });
-    return;
-  } catch (error) {
-    next(error);
-  }
-};
-
+const deleteHotel = (req, res, next) => __awaiter(void 0, void 0, void 0, function* () {
+    try {
+        const hotelId = req.params.id;
+        // Delete the hotel
+        yield Hotel_1.default.findByIdAndDelete(hotelId);
+        // Return the response
+        res.status(200).json({ success: true, message: "hotel deleted successful" });
+        return;
+    }
+    catch (error) {
+        next(error);
+    }
+});
+exports.deleteHotel = deleteHotel;
