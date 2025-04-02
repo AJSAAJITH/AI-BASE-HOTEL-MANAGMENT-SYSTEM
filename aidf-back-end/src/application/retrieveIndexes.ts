@@ -35,7 +35,7 @@ export const retrieve = async (
             query as string
         );
 
-        console.log(results);
+        console.log("Results", results);
 
         const matchedHotels = await Promise.all(
             results.map(async (result) => {
@@ -54,6 +54,9 @@ export const retrieve = async (
             );
         return;
     } catch (error) {
+        console.error("Error occurred:", error); // Logs full error for debugging
         next(error);
+
+        // next(error);
     }
 };

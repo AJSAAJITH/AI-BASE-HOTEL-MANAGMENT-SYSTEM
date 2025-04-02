@@ -11,9 +11,9 @@ export default function HotelListings() {
     isLoading,
     isError,
     error,
-  } = useGetHotelsForSearchQueryQuery({
-    query: searchValue,
-  });
+  } = useGetHotelsForSearchQueryQuery(
+    searchValue,
+  );
 
   const locations = ["ALL", "France", "Italy", "Australia", "Japan"];
   const [selectedLocation, setSelectedLocation] = useState("ALL");
